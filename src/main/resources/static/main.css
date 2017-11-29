@@ -1,0 +1,14 @@
+body {
+    background-color: #f4f4f4;
+}
+
+#main-content {
+    max-width: 900px;
+    padding: 2em 3em;
+    margin: 0 auto 25px;
+    background-color: #fff;
+    border: 1px solid #e5e5e5;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}

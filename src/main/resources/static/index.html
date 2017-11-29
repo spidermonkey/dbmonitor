@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello WebSocket</title>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/main.css" rel="stylesheet">
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+    <script src="/app.js"></script>
+</head>
+<body>
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Please enable Javascript and reload this page</h2></noscript>
+<div id="main-content" class="container">
+    <div id="connected" class="alert alert-info">WebSocket connection is not made</div>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="conversation" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Table</th>
+                    <th>Id</th>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody id="notifications">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
