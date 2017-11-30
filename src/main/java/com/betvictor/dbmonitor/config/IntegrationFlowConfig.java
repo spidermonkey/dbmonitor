@@ -2,8 +2,10 @@ package com.betvictor.dbmonitor.config;
 
 import com.betvictor.dbmonitor.AuditTrailEntityToDbChangeEventTransformer;
 import com.betvictor.dbmonitor.db.AuditTrailEntityRowMapper;
+import com.betvictor.dbmonitor.enitites.DataBaseEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.EnableIntegration;
@@ -19,6 +21,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableIntegration
 @Slf4j
+@EnableConfigurationProperties(DbMonitorProperties.class)
 public class IntegrationFlowConfig {
 
     @Autowired
@@ -27,9 +30,12 @@ public class IntegrationFlowConfig {
     @Autowired
     private SimpMessagingTemplate webSocket;
 
+    @Autowired
+    private DbMonitorProperties dbMonitorProperties;
+
     @Bean
     public MessageSource<Object> jdbcMessageSource() {
-        JdbcPollingChannelAdapter jdbcPollingChannelAdapter = new JdbcPollingChannelAdapter(this.dataSource, "SELECT * FROM SOME_TABLE_AUDIT_TRAIL WHERE NOTIFIED = FALSE");
+        JdbcPollingChannelAdapter jdbcPollingChannelAdapter = new JdbcPollingChannelAdapter(this.dataSource, "SELECT * FROM SOME_TABLE_AUDIT_TRAIL WHERE NOTIFIED = FALSE ORDER BY TIMESTAMP");
         jdbcPollingChannelAdapter.setUpdateSql("UPDATE SOME_TABLE_AUDIT_TRAIL SET NOTIFIED=TRUE WHERE ID IN (:id);");
         jdbcPollingChannelAdapter.setUpdatePerRow(true);
         jdbcPollingChannelAdapter.setRowMapper(new AuditTrailEntityRowMapper());
@@ -40,14 +46,14 @@ public class IntegrationFlowConfig {
     public IntegrationFlow dbToWebSocketFlow() {
         return IntegrationFlows.from(this.jdbcMessageSource(), c ->
                 c.poller(Pollers
-                        .fixedRate(1000)
-                        .maxMessagesPerPoll(10)))
+                        .fixedRate(dbMonitorProperties.getPollRate())
+                        .maxMessagesPerPoll(dbMonitorProperties.getMaxMessagesPerPoll())))
                 .split()
                 .transform(new AuditTrailEntityToDbChangeEventTransformer())
-                .handle(message ->
+                .handle( message ->
                 {
-                    webSocket.convertAndSend("/topic/dbInsertNotifications", message.getPayload());
-                    log.info("Database event successfully sent to WebSocket destination" );
+                    webSocket.convertAndSend(dbMonitorProperties.getWebSocketPrefix() + dbMonitorProperties.getDbEventTopic(), message.getPayload());
+                    log.info("Database event with id {} successfully sent to WebSocket destination", ((DataBaseEvent)message.getPayload()).getRowId() );
                 })
                 .get();
     }

@@ -27,7 +27,7 @@ function disconnect() {
 }
 
 function showNotification(notification) {
-    $("#notifications").append("<tr><td>" + notification.tableName  +  "</td><td>" + notification.rowId  +  "</td><td>" +  notification.timeStamp + "</td><td>" + notification.dataBaseEventType + "</td></tr>");
+    $("#notifications").prepend("<tr><td>" + notification.tableName  +  "</td><td>" + notification.rowId  +  "</td><td>" +  notification.timeStamp + "</td><td>" + notification.dataBaseEventType + "</td></tr>");
 }
 
 $(function () {
