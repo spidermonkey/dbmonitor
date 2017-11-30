@@ -32,19 +32,19 @@ https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/maven-plugin/[Spring Boot 
 	$ ./mvnw clean spring-boot:run
 ----
 
-The regular `mvn` command can also be used.The application starts up on port number: `8080`. To use alternative port:
+The regular `mvn` command can also be used.The application starts up on port number: `8080`.
+Use `-Dserver.port=<alternative port>` option to set alternative port number.
 
-[indent=0]
-----
-	$ ./mvnw clean spring-boot:run -Dserver.port=<alternative port>
-----
  
 
 == How to use the application:
 
-The minimalistic UI of the application is avalable on the root (`/`) context-path. i.e: http://localhost:8080/
+TIP: The application is monitoring the table named: `SOME_TABLE`.
 
-The http://www.h2database.com/html/main.html[H2 database] console is exposed in `/console/`. In case of using default port: http://localhost:8080/console/
+
+The UI of the application is available on the root (`/`) context-path. i.e: http://localhost:8080/
+
+To interact with the The http://www.h2database.com/html/main.html[H2 database]: console is exposed in `/console/`. In case of using default port: http://localhost:8080/console/
 
 Please use the following (default) connection details to log in:
 
@@ -55,8 +55,6 @@ Please use the following (default) connection details to log in:
     User Name: sa
     Password: <leave this empty>
 ----
-
-TIP: The application is monitoring the table named: `SOME_TABLE`.
 
 ==== Application health endpoints
 

@@ -117,8 +117,9 @@ public class DbMonitorApplicationIT {
             }
         };
         this.stompClient.connect("ws://localhost:{port}/betvictor", this.headers, handler, this.port);
+        Thread.sleep(2000); //not nice but client seems to require time to connect
         DataBaseHelper.insertIntoTableUnderMonitor(jdbcTemplate, "Test1", "Test2", "Test3");
-        boolean latchResult = countDownLatch.await(20, TimeUnit.SECONDS);
+        boolean latchResult = countDownLatch.await(60, TimeUnit.SECONDS);
         //make sure that the latch terminated without errors
         assertThat(latchResult).isEqualTo(true);
         //check that the table is updated
