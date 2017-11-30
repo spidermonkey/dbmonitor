@@ -1,4 +1,4 @@
-image:https://travis-ci.com/spidermonkey/dbmonitor.svg?token=QH8iyKngPQHWyyZuJztT&branch=master[Travis]
+image:https://travis-ci.com/spidermonkey/dbmonitor.svg?branch=master["Build Status", link="https://travis-ci.com/spidermonkey/dbmonitor"]
 
 = Database monitoring application
 
