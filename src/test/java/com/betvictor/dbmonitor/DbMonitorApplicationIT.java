@@ -96,7 +96,7 @@ public class DbMonitorApplicationIT {
         };
         this.stompClient.connect("ws://localhost:{port}/betvictor", this.headers, handler, this.port);
         DataBaseHelper.insertIntoTableUnderMonitor(jdbcTemplate, "Test1", "Test2", "Test3");
-        boolean latchResult = countDownLatch.await(10, TimeUnit.SECONDS);
+        boolean latchResult = countDownLatch.await(20, TimeUnit.SECONDS);
         //make sure that the latch terminated without errors
         assertThat(latchResult).isEqualTo(true);
     }
