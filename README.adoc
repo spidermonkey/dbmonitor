@@ -2,6 +2,92 @@ image:https://travis-ci.com/spidermonkey/dbmonitor.svg?token=QH8iyKngPQHWyyZuJzt
 
 = Database monitoring application
 
+== Building from Source
+The application can be easily built with the
+https://github.com/takari/maven-wrapper[maven wrapper]. You also need JDK 1.8.
+
+[indent=0]
+----
+	$ ./mvnw clean install
+----
+
+If you want to build with the regular `mvn` command, you will need
+http://maven.apache.org/run-maven/index.html[Maven v3.2.1 or above].
+
+NOTE: You may need to increase the amount of memory available to Maven by setting
+a `MAVEN_OPTS` environment variable with the value `-Xmx512m`. Remember
+to set the corresponding property in your IDE as well if you are building and running
+tests there (e.g. in Eclipse go to `Preferences->Java->Installed JREs` and edit the
+JRE definition so that all processes are launched with those arguments). This property
+is automatically set if you use the maven wrapper.
+
+NOTE: To compile/work with the code in your IDE you most probably need to install a Lombok plugin.
+
+== Starting the application
+To start the aplication use 
+https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/maven-plugin/[Spring Boot Maven Plugin]
+
+[indent=0]
+----
+	$ ./mvnw clean spring-boot:run
+----
+
+The regular `mvn` command can also be used.The application starts up on port number: `8080`. To use alternative port:
+
+[indent=0]
+----
+	$ ./mvnw clean spring-boot:run -Dserver.port=<alternative port>
+----
+ 
+
+== How to use the application:
+
+The minimalistic UI of the application is avalable on the root (`/`) context-path. i.e: http://localhost:8080/
+
+The http://www.h2database.com/html/main.html[H2 database] console is exposed in `/console/`. In case of using default port: http://localhost:8080/console/
+
+Please use the following (default) connection details to log in:
+
+[indent=0]
+----
+    Driver Class: org.h2.Driver
+    JDBC URL: jdbc:h2:mem:testdb
+    User Name: sa
+    Password: <leave this empty>
+----
+
+TIP: The application is monitoring the table named: `SOME_TABLE`.
+
+==== Application health endpoints
+
+The following endpoints are exposed to assess application health:
+
+* http://localhost:8080/health[_/health_] - 'OK'
+* http://localhost:8080/version[_/version_] - current version of the application
+
+=== Testing
+
+Unit, Integration and end-to-end tests are provided.
+
+NOTE: Please note that integration tests are using the **IT.java prefix and executed by the maven failsafe plugin
+
+To run all except the end-to-end tests:
+[indent=0]
+----
+	$ ./mvnw clean verify
+----
+
+==== End to end test
+
+One front to back test is provided using htmlUnit. Since the execution of this test is relatively slow,
+I decided to move this test to a separate maven profile.
+
+In order to run all tests including the e2e test:
+[indent=0]
+----
+	$ ./mvnw clean verify -Pe2e
+----
+
 === Technology stack used by the application:
 
 The folowing technologies are  used by the application:
@@ -47,7 +133,7 @@ Database Triggers are used (H2 in this case but can be generalised to other DB t
 updates or inserts. The trigger writes event records in a table called: *AUDIT_TRAIL_TABLE*. These audit trail records then picked
 up and processed by the following _Spring Integration_ flow:
 
-           +------------+    +------------+    +------------+    +------------+
+          +------------+    +------------+    +------------+    +------------+
 H2        |  JDBC      |    |  Splitter  |    |Transformer |    | Websocket  |
 AUDIT --->|  Inbound   |--->|            |--->|            |--->| Service    |-->BROWSER
 TRAIL     |  Channel   |    |            |    |            |    | Activator  |
@@ -59,92 +145,8 @@ Benefits of this design:
 * Standard solution (EIP design patterns)
 * Spring Integration provides resiliency and low coupling
 * Highly customisable and modular
-* Failover scenarious are provided by the framework (e.g Transaction rollback)
+* Failover scenarios are provided by the framework (e.g Transaction rollback)
 
-
-== Building from Source
-The application can be easily built with the
-https://github.com/takari/maven-wrapper[maven wrapper]. You also need JDK 1.8.
-
-[indent=0]
-----
-	$ ./mvnw clean install
-----
-
-If you want to build with the regular `mvn` command, you will need
-http://maven.apache.org/run-maven/index.html[Maven v3.2.1 or above].
-
-NOTE: You may need to increase the amount of memory available to Maven by setting
-a `MAVEN_OPTS` environment variable with the value `-Xmx512m`. Remember
-to set the corresponding property in your IDE as well if you are building and running
-tests there (e.g. in Eclipse go to `Preferences->Java->Installed JREs` and edit the
-JRE definition so that all processes are launched with those arguments). This property
-is automatically set if you use the maven wrapper.
-
-== Starting the application
-To start the aplication use 
-https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/maven-plugin/[Spring Boot Maven Plugin]
-
-[indent=0]
-----
-	$ ./mvnw clean spring-boot:run
-----
-
-The regular `mvn` command can also be used.The application starts up on port number: `8080`. To use alternative port:
-
-[indent=0]
-----
-	$ ./mvnw clean spring-boot:run -Dserver.port=<alternative port>
-----
- 
-
-== How to use the application:
-
-The minimalistic UI of the application is avalable on the root (`/`) context-path. i.e: http://localhost:8080/
-
-The http://www.h2database.com/html/main.html[H2 database] console is exposed in `/console/`. In case of using default port: http://localhost:8080/console/
-
-Please use the following (default) connection details to log in:
-
-[indent=0]
-----
-    Driver Class: org.h2.Driver
-    JDBC URL: jdbc:h2:mem:testdb
-    User Name: sa
-    Password: <leave this empty>
-----
-
-The application is monitoring the table named: `SOME_TABLE`. 
-
-==== Application health endpoints
-
-The following endpoints are exposed to assess application health:
-
-* http://localhost:8080/health[_/health_] - 'OK'
-* http://localhost:8080/version[_/version_] - current version of the application
-
-=== Testing
-
-Unit, Integration and end-to-end tests are provided.
-
-NOTE: Please note that integration tests are using the **IT.java prefix and executed by the maven failsafe plugin
-
-To run all except the end-to-end tests:
-[indent=0]
-----
-	$ ./mvnw clean verify
-----
-
-==== End to end test
-
-One front to back test is provided using htmlUnit. Since the execution of this test is relatively slow,
-I decided to move this test to a separate maven profile.
-
-In order to run all tests including the e2e test:
-[indent=0]
-----
-	$ ./mvnw clean verify -Pe2e
-----
 
 == License
 Open Source software released under the
