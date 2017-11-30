@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="01" author="forgacs">
+
+        <createTable tableName="SOME_TABLE"
+                     remarks="Some table to monitor">
+            <column name="id" type="varchar(255)">
+                <constraints nullable="false" unique="true" primaryKey="true"/>
+            </column>
+            <column name="some_attribute_1" type="varchar(255)">
+                <constraints nullable="true" unique="false"/>
+            </column>
+            <column name="some_attribute_2" type="varchar(255)">
+                <constraints nullable="true" unique="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="AUDIT_TRAIL"
+                     remarks="A table to contain all books">
+            <column name="event_id" autoIncrement="true" type="int">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="table_name" type="varchar(255)">
+                <constraints nullable="false" unique="false" />
+            </column>
+            <column name="id" type="varchar(255)">
+                <constraints nullable="false" unique="false" />
+            </column>
+            <column name="timestamp" type="timestamp">
+                <constraints nullable="false" unique="false" />
+            </column>
+            <column name="change_type" type="varchar(255)">
+                <constraints nullable="false" unique="false" />
+            </column>
+            <column name="notified" type="boolean" defaultValue="false">
+                <constraints nullable="false" unique="false" />
+            </column>
+
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="02" author="forgacs">
+        <sql>
+            CREATE TRIGGER insert_trigger
+            AFTER INSERT
+            ON SOME_TABLE
+            FOR EACH ROW
+            CALL "com.betvictor.dbmonitor.db.TableChangeTrigger"
+        </sql>
+
+        <sql>
+            CREATE TRIGGER update_trigger
+            AFTER UPDATE
+            ON SOME_TABLE
+            FOR EACH ROW
+            CALL "com.betvictor.dbmonitor.db.TableChangeTrigger"
+        </sql>
+    </changeSet>
+</databaseChangeLog>
