@@ -28,7 +28,7 @@ public class IntegrationFlowConfig {
     private DataSource dataSource;
 
     @Autowired
-    private SimpMessagingTemplate webSocket;
+    private SimpMessagingTemplate broker;
 
     @Autowired
     private DbMonitorProperties dbMonitorProperties;
@@ -50,7 +50,7 @@ public class IntegrationFlowConfig {
     public MessageSource<Object> jdbcMessageSource() {
         JdbcPollingChannelAdapter jdbcPollingChannelAdapter = new JdbcPollingChannelAdapter(this.dataSource, POLLING_QUERY);
         jdbcPollingChannelAdapter.setUpdateSql(UPDATE_QUERY);
-       // jdbcPollingChannelAdapter.setUpdatePerRow(true);
+        jdbcPollingChannelAdapter.setUpdatePerRow(false);
         jdbcPollingChannelAdapter.setRowMapper(auditTrailEntityRowMapper);
         return jdbcPollingChannelAdapter;
     }
@@ -65,13 +65,13 @@ public class IntegrationFlowConfig {
         return IntegrationFlows.from(this.jdbcMessageSource(), c ->
                 c.poller(Pollers
                         .fixedRate(dbMonitorProperties.getPollRate())
-                        .transactional() //this is super important: making the transaction fail if websocket is closed
+                        .transactional() //this is important: making database transaction fail if websocket is closed
                         .maxMessagesPerPoll(dbMonitorProperties.getMaxMessagesPerPoll())))
                 .split()
                 .transform(auditTrailEntityToDbChangeEventTransformer)
                 .handle(message ->
                 {
-                    webSocket.convertAndSend(dbMonitorProperties.getWebSocketPrefix() + dbMonitorProperties.getDbEventTopic(), message.getPayload());
+                    broker.convertAndSend(dbMonitorProperties.getWebSocketPrefix() + dbMonitorProperties.getDbEventTopic(), message.getPayload());
                     log.info("Database event with id {} successfully sent to WebSocket destination", ((DataBaseEvent) message.getPayload()).getRowId());
                 })
                 .get();

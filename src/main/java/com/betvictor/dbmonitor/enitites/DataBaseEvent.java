@@ -13,11 +13,14 @@ import java.time.LocalDateTime;
 public class DataBaseEvent {
     @NonNull
     private final String tableName;
+
     @NonNull
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private final LocalDateTime timeStamp;
+
     @NonNull
     private final String rowId;
+
     @NonNull
     private final DataBaseEventType dataBaseEventType;
 

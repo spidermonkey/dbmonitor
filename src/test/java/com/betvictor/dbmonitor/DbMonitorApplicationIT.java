@@ -1,5 +1,7 @@
 package com.betvictor.dbmonitor;
 
+import com.betvictor.dbmonitor.db.AuditTrailEntityRowMapper;
+import com.betvictor.dbmonitor.enitites.AuditTrailEntity;
 import com.betvictor.dbmonitor.enitites.DataBaseEvent;
 import com.betvictor.dbmonitor.helpers.DataBaseHelper;
 import org.junit.Before;
@@ -8,18 +10,17 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.messaging.simp.stomp.*;
+import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandler;
+import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.messaging.SubProtocolWebSocketHandler;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
@@ -42,6 +43,9 @@ public class DbMonitorApplicationIT {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     private SockJsClient sockJsClient;
 
@@ -76,6 +80,20 @@ public class DbMonitorApplicationIT {
     }
 
     @Test
+    public void shouldHealthEndpointRespond() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/health", String.class);
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo("OK");
+    }
+
+    @Test
+    public void shouldVersionEndpointRespond() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/version", String.class);
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo("0.0.1-SNAPSHOT");
+    }
+
+    @Test
     public void shouldMessageBeSentToWebSocket() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         StompSessionHandler handler = new StompSessionHandlerAdapter() {
@@ -84,6 +102,10 @@ public class DbMonitorApplicationIT {
                 session.subscribe("/topic/dbInsertNotifications", new StompSessionHandlerAdapter() {
                     @Override
                     public void handleFrame(StompHeaders headers, Object payload) {
+                        assertThat(payload).isInstanceOf(DataBaseEvent.class);
+                        DataBaseEvent dbEvent = (DataBaseEvent) payload;
+                        assertThat(dbEvent.getTableName()).isEqualTo("SOME_TABLE");
+                        assertThat(dbEvent.getRowId()).isEqualTo("Test1");
                         countDownLatch.countDown();
                     }
 
@@ -99,6 +121,9 @@ public class DbMonitorApplicationIT {
         boolean latchResult = countDownLatch.await(20, TimeUnit.SECONDS);
         //make sure that the latch terminated without errors
         assertThat(latchResult).isEqualTo(true);
+        //check that the table is updated
+        List<AuditTrailEntity> result = jdbcTemplate.query("SELECT * FROM AUDIT_TRAIL", new AuditTrailEntityRowMapper());
+        assertThat(result.get(0).isNotified()).isEqualTo(true);
     }
 
 }
