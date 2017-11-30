@@ -11,6 +11,7 @@ public class AuditTrailEntityRowMapper implements RowMapper<AuditTrailEntity> {
     public AuditTrailEntity mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         return AuditTrailEntity
                 .builder()
+                .eventId(resultSet.getLong("EVENT_ID"))
                 .id(resultSet.getString("ID"))
                 .tableName(resultSet.getString("TABLE_NAME"))
                 .changeType(resultSet.getString("CHANGE_TYPE"))

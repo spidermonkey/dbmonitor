@@ -25,7 +25,7 @@ import javax.sql.DataSource;
 public class IntegrationFlowConfig {
 
     @Autowired
-    public DataSource dataSource;
+    private DataSource dataSource;
 
     @Autowired
     private SimpMessagingTemplate webSocket;
@@ -33,27 +33,46 @@ public class IntegrationFlowConfig {
     @Autowired
     private DbMonitorProperties dbMonitorProperties;
 
+    @Autowired
+    private AuditTrailEntityRowMapper auditTrailEntityRowMapper;
+
+    private static final String POLLING_QUERY = "SELECT * FROM AUDIT_TRAIL WHERE NOTIFIED = FALSE ORDER BY TIMESTAMP";
+
+    public static final String UPDATE_QUERY = "UPDATE AUDIT_TRAIL SET NOTIFIED=TRUE WHERE EVENT_ID IN (:eventId)";
+
+
+    @Bean
+    public AuditTrailEntityRowMapper auditTrailEntityRowMapper() {
+        return new AuditTrailEntityRowMapper();
+    }
+
     @Bean
     public MessageSource<Object> jdbcMessageSource() {
-        JdbcPollingChannelAdapter jdbcPollingChannelAdapter = new JdbcPollingChannelAdapter(this.dataSource, "SELECT * FROM SOME_TABLE_AUDIT_TRAIL WHERE NOTIFIED = FALSE ORDER BY TIMESTAMP");
-        jdbcPollingChannelAdapter.setUpdateSql("UPDATE SOME_TABLE_AUDIT_TRAIL SET NOTIFIED=TRUE WHERE ID IN (:id);");
-        jdbcPollingChannelAdapter.setUpdatePerRow(true);
-        jdbcPollingChannelAdapter.setRowMapper(new AuditTrailEntityRowMapper());
+        JdbcPollingChannelAdapter jdbcPollingChannelAdapter = new JdbcPollingChannelAdapter(this.dataSource, POLLING_QUERY);
+        jdbcPollingChannelAdapter.setUpdateSql(UPDATE_QUERY);
+       // jdbcPollingChannelAdapter.setUpdatePerRow(true);
+        jdbcPollingChannelAdapter.setRowMapper(auditTrailEntityRowMapper);
         return jdbcPollingChannelAdapter;
     }
 
     @Bean
-    public IntegrationFlow dbToWebSocketFlow() {
+    public AuditTrailEntityToDbChangeEventTransformer auditTrailEntityToDbChangeEventTransformer() {
+        return new AuditTrailEntityToDbChangeEventTransformer();
+    }
+
+    @Bean
+    public IntegrationFlow dbToWebSocketFlow(AuditTrailEntityToDbChangeEventTransformer auditTrailEntityToDbChangeEventTransformer) {
         return IntegrationFlows.from(this.jdbcMessageSource(), c ->
                 c.poller(Pollers
                         .fixedRate(dbMonitorProperties.getPollRate())
+                        .transactional() //this is super important: making the transaction fail if websocket is closed
                         .maxMessagesPerPoll(dbMonitorProperties.getMaxMessagesPerPoll())))
                 .split()
-                .transform(new AuditTrailEntityToDbChangeEventTransformer())
-                .handle( message ->
+                .transform(auditTrailEntityToDbChangeEventTransformer)
+                .handle(message ->
                 {
                     webSocket.convertAndSend(dbMonitorProperties.getWebSocketPrefix() + dbMonitorProperties.getDbEventTopic(), message.getPayload());
-                    log.info("Database event with id {} successfully sent to WebSocket destination", ((DataBaseEvent)message.getPayload()).getRowId() );
+                    log.info("Database event with id {} successfully sent to WebSocket destination", ((DataBaseEvent) message.getPayload()).getRowId());
                 })
                 .get();
     }

@@ -19,7 +19,7 @@ public class DataBaseHelper {
     }
 
     public static void truncateTables(final JdbcTemplate jdbcTemplate) {
-        jdbcTemplate.execute("TRUNCATE TABLE SOME_TABLE_AUDIT_TRAIL");
+        jdbcTemplate.execute("TRUNCATE TABLE AUDIT_TRAIL");
         jdbcTemplate.execute("TRUNCATE TABLE SOME_TABLE");
     }
 }

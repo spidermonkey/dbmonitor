@@ -33,8 +33,8 @@ public class TableChangeTriggerIT {
     public void shouldTriggerExecutedAndMapCorrectValues() throws InterruptedException {
         LocalDateTime testStartTime = LocalDateTime.now();
         DataBaseHelper.insertIntoTableUnderMonitor(jdbcTemplate, "Test1", "Test2", "Test3");
-        Thread.sleep(100); //makes sense to wait until the trigger
-        List<AuditTrailEntity> result = jdbcTemplate.query("SELECT * FROM SOME_TABLE_AUDIT_TRAIL", new AuditTrailEntityRowMapper());
+        Thread.sleep(100); //makes sense to wait until the trigger kicks off
+        List<AuditTrailEntity> result = jdbcTemplate.query("SELECT * FROM AUDIT_TRAIL", new AuditTrailEntityRowMapper());
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getChangeType()).isEqualTo("INSERT");
         assertThat(result.get(0).getTableName()).isEqualTo("SOME_TABLE");
@@ -51,8 +51,8 @@ public class TableChangeTriggerIT {
             preparedStatement.setString(2, "Test1");
             return preparedStatement;
         });
-        Thread.sleep(100); //makes sense to wait until the trigger
-        List<AuditTrailEntity> result = jdbcTemplate.query("SELECT * FROM SOME_TABLE_AUDIT_TRAIL", new AuditTrailEntityRowMapper());
+        Thread.sleep(100);
+        List<AuditTrailEntity> result = jdbcTemplate.query("SELECT * FROM AUDIT_TRAIL", new AuditTrailEntityRowMapper());
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getChangeType()).isEqualTo("INSERT");

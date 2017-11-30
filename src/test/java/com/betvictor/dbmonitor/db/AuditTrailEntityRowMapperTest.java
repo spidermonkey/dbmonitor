@@ -24,6 +24,7 @@ public class AuditTrailEntityRowMapperTest {
     @Test
     public void shouldMapFieldsCorrectly() throws SQLException {
         Timestamp someTimeStamp = new Timestamp(1000);
+        when(resultSet.getLong("EVENT_ID")).thenReturn(1L);
         when(resultSet.getString("ID")).thenReturn("testId");
         when(resultSet.getString("TABLE_NAME")).thenReturn("testTableName");
         when(resultSet.getString("CHANGE_TYPE")).thenReturn("testChangeType");
@@ -35,6 +36,7 @@ public class AuditTrailEntityRowMapperTest {
         assertThat(result.getChangeType()).isEqualTo("testChangeType");
         assertThat(result.getTimeStamp()).isEqualTo(someTimeStamp.toLocalDateTime());
         assertThat(result.isNotified()).isEqualTo(true);
+        assertThat(result.getEventId()).isEqualTo(1);
     }
 
 }

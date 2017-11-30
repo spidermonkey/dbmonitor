@@ -21,8 +21,11 @@
             </column>
         </createTable>
 
-        <createTable tableName="SOME_TABLE_AUDIT_TRAIL"
+        <createTable tableName="AUDIT_TRAIL"
                      remarks="A table to contain all books">
+            <column name="event_id" autoIncrement="true" type="int">
+                <constraints nullable="false" unique="true" />
+            </column>
             <column name="table_name" type="varchar(255)">
                 <constraints nullable="false" unique="false" />
             </column>

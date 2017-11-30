@@ -1,0 +1,119 @@
+= Database monitoring application
+
+=== Technology stack used by the application:
+
+The folowing technologies are being used by the application:
+
+* Spring
+* Spring Boot
+* Spring integration
+* Spring MVC
+* Tomcat
+* Slf4j - default spring boot configuration
+* H2 database
+* http://www.liquibase.org/[Liquibase] - to bootstrap db tables and triggers
+* Spring webSocket support
+* Mockito
+* https://github.com/awaitility/awaitility[Awaitility] - for async waiting in tests
+* https://projectlombok.org/[Lombok] - the reduce verbosity
+* JQuery
+* StompJs
+* Twitter bootstrap - for advances layout
+
+=== Technology considerations
+
+* *Database:* I choose a lightweight H2 database to demonstrate the application, but the solution is manily agnostic to database technology. (The only H2 specific piece is the trigger definition but other databases support the same triggering concepts)
+* *Spring integration:* As I see task as an integration problem (DB input -> Websocket Output) I choose _Spring Integration_ that provides high level, resilient paradigms to implement this task.
+* *Messaging technology* I decided not to use any messaging technology, since resiliency can be achieved on the DB level also coupling is low thank to Spring Integration.
+
+=== Assumptions
+
+I've made some basic assumptions related to the requirements.
+
+* The tool should only monitor INSERT and UPDATE statements on the table.
+* Only events (INSERT, UPDATE) occurred after the browser window opens appear on the screen. Previously created events do not.
+* The tool has to be easly extendable to monitor more than one tables
+* The tool monitoring mechanism should be (relatively) independent from the database technology
+* The table name to be monitored is hardcoded in the application (can easily be made dynamic by manually seting the DB triggers)
+* The solution must be a development ready productionised implementation
+
+
+=== Design
+
+The (Spring) integration flow implemented:
+
+ +------------+       +------------+      +------------+      +------------+
+ |  JDBC      |       |  Splitter  |      |Transformer |      | Websocket  |
+ |  Inbound   |  ---> |            | ---> |            | ---> | Service    |
+ |  Channel   |       |            |      |            |      | Activator  |
+ |  Adapter   |       |            |      |            |      |            |
+ +------------+       +------------+      +------------+      +------------+
+
+
+=== Testing
+
+== Building from Source
+The application can be easily built with the
+https://github.com/takari/maven-wrapper[maven wrapper]. You also need JDK 1.8.
+
+[indent=0]
+----
+	$ ./mvnw clean install
+----
+
+If you want to build with the regular `mvn` command, you will need
+http://maven.apache.org/run-maven/index.html[Maven v3.2.1 or above].
+
+NOTE: You may need to increase the amount of memory available to Maven by setting
+a `MAVEN_OPTS` environment variable with the value `-Xmx512m`. Remember
+to set the corresponding property in your IDE as well if you are building and running
+tests there (e.g. in Eclipse go to `Preferences->Java->Installed JREs` and edit the
+JRE definition so that all processes are launched with those arguments). This property
+is automatically set if you use the maven wrapper.
+
+== Starting the application
+To start the aplication use 
+https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/maven-plugin/[Spring Boot Maven Plugin]
+
+[indent=0]
+----
+	$ ./mvnw clean spring-boot:run
+----
+
+The regular `mvn` command can also be used.The application starts up on port number: `8080`. To use alternative port:
+
+[indent=0]
+----
+	$ ./mvnw clean spring-boot:run -Dserver.port=<alternative port>
+----
+ 
+
+== Use the appication
+
+The minimalistic UI of the application is avalable on the root (`/`) context-path. i.e: http://localhost:8080/
+
+The http://www.h2database.com/html/main.html[H2 database] console is exposed in `/console/`. In case of using default port: http://localhost:8080/console/
+
+Please use the following (default) connection details to log in:
+
+[indent=0]
+----
+    Driver Class: org.h2.Driver
+    JDBC URL: jdbc:h2:mem:testdb
+    User Name: sa
+    Password: <leave this empty>
+----
+
+The application is monitoring the table named: `SOME_TABLE`. 
+
+==== Application health endpoints
+
+The following endpoints are exposed to assess application health:
+
+* http://localhost:8080/health[_/health_] - 'OK'
+* http://localhost:8080/version[_/version_] - current version of the application
+
+
+== License
+Open Source software released under the
+http://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].

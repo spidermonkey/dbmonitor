@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 @Data
 public class AuditTrailEntity {
+    private final long eventId;
     @NonNull
     private final String tableName;
     @NonNull

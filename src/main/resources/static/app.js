@@ -1,8 +1,14 @@
 var stompClient = null;
 
 function setConnected(connected) {
-    $("#connected").html("WebSocket connection established!");
-    $("#connected").attr('class', "alert alert-success");
+    if (connected) {
+        $("#connected").html("WebSocket connection established!");
+        $("#connected").attr('class', "alert alert-success");
+    }
+    else {
+        $("#connected").html("WebSocket connection failed!");
+        $("#connected").attr('class', "alert alert-error");
+    }
 }
 
 function connect() {
@@ -11,9 +17,11 @@ function connect() {
     stompClient.connect({}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
-    stompClient.subscribe('/topic/dbInsertNotifications', function (dbInsert) {
+        stompClient.subscribe('/topic/dbInsertNotifications', function (dbInsert) {
             showNotification(JSON.parse(dbInsert.body));
         });
+    }, function() {
+        setConnected(false);
     });
 }
 

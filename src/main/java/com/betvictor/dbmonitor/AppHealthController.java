@@ -11,7 +11,7 @@ public class AppHealthController {
     @Autowired
     private DbMonitorProperties dbMonitorProperties;
 
-    @GetMapping("/apphealth")
+    @GetMapping("/health")
     public String alive()  {
         return "OK";
     }

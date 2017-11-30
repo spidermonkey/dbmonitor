@@ -10,10 +10,16 @@ import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.messaging.SubProtocolWebSocketHandler;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
@@ -23,6 +29,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,7 +72,7 @@ public class DbMonitorApplicationIT {
 
     @Test
     public void shouldAuditTrailTableExistAfterStartup() {
-        jdbcTemplate.execute("SELECT * FROM SOME_TABLE_AUDIT_TRAIL");
+        jdbcTemplate.execute("SELECT * FROM AUDIT_TRAIL");
     }
 
     @Test
@@ -84,23 +91,14 @@ public class DbMonitorApplicationIT {
                     public Type getPayloadType(StompHeaders headers) {
                         return DataBaseEvent.class;
                     }
-
-                    @Override
-                    public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                        super.handleException(session, command, headers, payload, exception);
-                    }
-
-                    @Override
-                    public void handleTransportError(StompSession session, Throwable exception) {
-                        super.handleTransportError(session, exception);
-                    }
                 });
             }
         };
         this.stompClient.connect("ws://localhost:{port}/betvictor", this.headers, handler, this.port);
-        Thread.sleep(1000);
         DataBaseHelper.insertIntoTableUnderMonitor(jdbcTemplate, "Test1", "Test2", "Test3");
-        countDownLatch.await();
+        boolean latchResult = countDownLatch.await(10, TimeUnit.SECONDS);
+        //make sure that the latch terminated without errors
+        assertThat(latchResult).isEqualTo(true);
     }
 
 }
