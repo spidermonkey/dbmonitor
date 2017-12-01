@@ -58,7 +58,7 @@ public class DbMonitorEndToEndIT {
     }
 
     @Test(timeout = 60000)
-    public void shouldRenderDatabaseChanges() throws InterruptedException, IOException {
+    public void shouldRenderDatabaseChanges() throws IOException {
         Page page = webClient.getPage("http://localhost:" + port + "/");
         waitUntilWebSocketIsConnected((HtmlPage) page);
         DataBaseHelper.insertIntoTableUnderMonitor(jdbcTemplate, "test1", "test2", "test3");
