@@ -43,7 +43,7 @@ The main application is available on the root (`/`) context-path. i.e: http://lo
 
 To interact with the The http://www.h2database.com/html/main.html[H2 database]: console is exposed in `/console/`. In case of using default port: http://localhost:8080/console/
 
-Please use the following (default) connection details to log in:
+IMPORTANT: Please use the following connection details to log in to the database:
 
 [indent=0]
 ----
